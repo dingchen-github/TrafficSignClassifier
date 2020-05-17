@@ -70,6 +70,7 @@ The variable 'label' contains arranged numbers from 0 to 42, and 'count' has the
 ![alt text][image1]
 
 For every class, I print an image as an example. Some images are so dark and vague that even human eyes can not identify the traffic signs.
+
 ![alt text][image2]
 
 ---
@@ -78,20 +79,25 @@ For every class, I print an image as an example. Some images are so dark and vag
 #### 1. Describe how you preprocessed the image data.
 
 At first, I run the model on my MacBook without GPU, and without preprocessing. With the LeNet5 solution from the lecture, a validation accuracy of ca. 0.89 can be achieved.
+
 ![alt text][image3]
 
 Since the training accuracy is higher than the validation accuracy, suggesting an overfitting, I add **dropout** to the LeNet5 model between fully connected layers (note: no dropout in validation accuracy evaluation). The gap between both accuracies can be reduced, and the validation accuracy is slightly increased, meaning that dropout is a good technique.
+
 ![alt text][image4]
 
 Then I add **grayscale** preprocessing, because in most traffic signs, color is not important information, but form. Since I use `cv2.cvtColor()`, the output shape if (32,32) instead of (32,32,1) which the model can take in, so I have to add one dimension with `np.expand_dims()` (Note: `reshape()` could do the same).
 
 After grayscale, the accuracy curves are more stable, but there is hardly improvement of the absolute accuracy.
+
 ![alt text][image5]
 
 Then I add **normalization** using (pixel - 128)/128. Surprisingly, the accuracy drops.
+
 ![alt text][image6]
 
 My guess is, (pixel - 128)/128 does not give a mean of exactly 0, but slightly below 0. So I decide to try (pixel - 127.5)/127.5, which has a good result. But later we will see that this does not matter to the GPU. *(By the way, thank you Udacity for providing GPU to us!)*
+
 ![alt text][image7]
 
 Since there is still a gap between training and validation accuracy, I decide to try **data augmentation** to add images to each class, so that all classes have the same amount of images. To generate new images, I randomly rotate and translate existing images.
@@ -107,12 +113,15 @@ M_trans = np.float32([[1,0,dx],[0,1,dy]])
 img = cv2.warpAffine(image,M_rot,(cols,rows))
 img = cv2.warpAffine(img,M_trans,(cols,rows))
 ```
+
 ![alt text][image8]
 
 One example of augmented image is given below.
+
 ![alt text][image9]
 
-Add data augmentation to grayscale and normalization does close the accuracy gap, but by reducing the training accuracy, not by increasing the validation accuracy. This is the same on GPU. Considering the training is much slower with data augmentation, I decide to abandon it.
+Adding data augmentation to grayscale and normalization does close the accuracy gap, but by reducing the training accuracy, not by increasing the validation accuracy, see below. This is the same on GPU. Considering the training is much slower with data augmentation, I decide to abandon it.
+
 ![alt text][image10]
 
 #### 2. Describe what your final model architecture looks like.
@@ -150,6 +159,7 @@ Considering dropout and grayscale, my model consisted of the following layers:
 #### 4. Describe the approach taken for finding a solution and getting the validation set accuracy to be at least 0.93.
 
 I already discussed some points above in the preprocessing. I run the model on GPU and get an accuracy of ca. 0.9.
+
 ![alt text][image11]
 
 For grayscale I used `cv2.cvtColor()`. After online research, I discovered another method:
@@ -157,7 +167,9 @@ For grayscale I used `cv2.cvtColor()`. After online research, I discovered anoth
 np.sum(image_array/3, axis=3, keepdims=True)
 ```
 It turns out to be a far better method. So now I have a discover that different grayscale methods could have a big impact on image training.
+
 ![alt text][image12]
+
 After merely 30 epochs I get a validation accuracy of 0.963.
 
 At last I run the model on the test set and get a test accuracy of 0.950.
@@ -169,9 +181,11 @@ At last I run the model on the test set and get a test accuracy of 0.950.
 #### 1. Choose five German traffic signs found on the web and provide them in the report.
 
 Here are five German traffic signs that I found on the web (after resizing using `cv2.resize()`):
+
 ![alt text][image13]
 
 Using the same preprocessing, the images look like:
+
 ![alt text][image14]
 
 #### 2. Discuss the model's predictions on these new traffic signs and compare the results to predicting on the test set.
@@ -194,6 +208,7 @@ with tf.Session() as sess:
 ```
 
 The model is 100% sure about the 1., 3. and 5. images.
+
 The top five softmax probabilities for the 2. image were
 
 | Probability         	|     Prediction	        					|
